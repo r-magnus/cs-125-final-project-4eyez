@@ -27,10 +27,12 @@ The final project for CS125, combining a whole lot of DBs for a youth group even
 
 ### What should/shouldn’t they be able to do?
 - Admin
-  - Basically does everything
+  - Basically does everything (create an event, volunteer for an event, take notes, etc.)
   - Can’t sign up other people lol
     
 - Audience
+  - Signs up for events
+    - Parent/guardians can sign up for their kid(s)
   - Can’t perform admin tasks
     - Take attendance, upload notes, create events
 
