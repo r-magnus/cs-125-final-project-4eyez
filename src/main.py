@@ -1,7 +1,7 @@
 # Gabriel Leung <gleung@westmont.edu>
 # Ryan Magnuson <rmagnuson@westmont.edu>
 
-import FastAPI
+from fastapi import FastAPI
 import mysql.connector
 
 app = FastAPI()
