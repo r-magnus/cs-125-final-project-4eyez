@@ -10,17 +10,32 @@ from dotenv import load_dotenv
 
 ## SQL FUNCTIONS ##
 def connect_sql():
-    cnx = mysql.connector.connect(
-        user=USERNAME,
-        password=PASSWORD,
-        host=HOST,
-        database=DB
-    )
-    return cnx
+    try:
+        cnx = mysql.connector.connect(
+            user=USERNAME,
+            password=PASSWORD,
+            host=HOST,
+            database=DB
+        )
+        return cnx
+    except Exception as e:
+        print(f"Error connecting to DB: {e}")
 
 def ask_db(q: str):
+    """
+    A "safe" method that only allows SELECT-type queries on the current DB.
+    """
+    try:
+        if q.split(" ")[0] != "SELECT":
+            raise Exception("That's not allowed.")
+        crs = cnx.cursor()
+        crs.execute(q)
+        res = crs.fetchall()
+        crs.close()
 
-    return ""
+        return res
+    except Exception as e:
+        print(f"Error with query: {e}")
 
 
 ## API ##
@@ -28,12 +43,13 @@ app = FastAPI()
 
 @app.get("/")
 def main():
-    return {"message": "CS125 Paper Youth Group DB"}
+    return {"message": "CS125 Paper Youth Group DB",
+            "note": "THIS IS A FAKE DATABASE FOR LEARNING PURPOSES ONLY"}
 
 @app.get("/query/{statement}")
 async def query(statement: str):
     response = ask_db(statement)
-    return ""
+    return response
 
 ## MAIN ##
 if __name__ == '__main__':
