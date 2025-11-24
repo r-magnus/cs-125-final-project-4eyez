@@ -26,7 +26,7 @@ def ask_db(q: str):
     A "safe" method that only allows SELECT-type queries on the current DB.
     """
     try:
-        if q.split(" ")[0] != "SELECT":
+        if q.split(" ")[0] != "SELECT" or ';' in q:
             raise Exception("That's not allowed.")
         crs = cnx.cursor()
         crs.execute(q)
