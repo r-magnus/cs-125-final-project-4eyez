@@ -36,7 +36,6 @@ CREATE TABLE Meeting(
     title VARCHAR(100) NOT NULL
 );
 
-
 CREATE TABLE MeetingSignUpItem(
     id INT PRIMARY KEY,
     signeeId INT NOT NULL,
@@ -67,7 +66,6 @@ CREATE TABLE smallGroup(
     meetId INT NOT NULL,
     nextMeetingDate DATE,
     FOREIGN KEY (meetId) REFERENCES Meeting(meetId)
-
 );
 
 CREATE TABLE Event(
