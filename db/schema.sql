@@ -8,13 +8,19 @@ CREATE TABLE Person(
     lastName VARCHAR(50) NOT NULL
 );
 
+CREATE TABLE Guardian(
+    personId INT PRIMARY KEY,
+    FOREIGN KEY (personId) REFERENCES Person(personId)
+    ON DELETE CASCADE
+);
+
 CREATE TABLE Student(
     personId INT,
     guardianId INT NOT NULL,
     grade CHAR(1) NOT NULL,
     FOREIGN KEY (personId) REFERENCES Person(personId)
-    ON DELETE CASCADE
-    FOREIGN KEY(guardianId) REFERENCES Gaurdian(personId)
+    ON DELETE CASCADE,
+    FOREIGN KEY(guardianId) REFERENCES Guardian(personId)
     ON DELETE RESTRICT
 );
 
@@ -25,12 +31,6 @@ CREATE TABLE Volunteer(
 );
 
 CREATE TABLE Admin(
-    personId INT,
-    FOREIGN KEY (personId) REFERENCES Person(personId)
-    ON DELETE CASCADE
-);
-
-CREATE TABLE Guardian(
     personId INT,
     FOREIGN KEY (personId) REFERENCES Person(personId)
     ON DELETE CASCADE
@@ -58,7 +58,7 @@ CREATE TABLE NoteItem(
     Id INT PRIMARY KEY,
     writerId INT NOT NULL,
     meetingId INT NOT NULL,
-    textContent VARCHAR(MAX),
+    textContent TEXT,
     FOREIGN KEY (meetingId) REFERENCES Meeting(meetId)
     ON DELETE RESTRICT,
     FOREIGN KEY(writerId) REFERENCES Person(personId)
@@ -69,7 +69,7 @@ CREATE TABLE attendanceItem(
     id INT PRIMARY KEY,
     signupId INT NOT NULL,
     STATUS CHAR(1) NOT NULL,
-    FOREIGN KEY (signupId) REFERENCES MeetingSignUpItem(signeeId)
+    FOREIGN KEY (signupId) REFERENCES MeetingSignUpItem(id)
     ON DELETE CASCADE
 );
 
