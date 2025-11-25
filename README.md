@@ -5,6 +5,28 @@ The final project for CS125, combining a whole lot of DBs for a youth group even
 
 ## TEAM 4 EYEZ
 
+---
+
+### How-To
+
+"How do I run this thing?"
+
+* Create a virtual environment with `python -m venv .venv`
+  * Activate with `source .venv/bin/activate`
+  * Install dependencies with `pip install -r requirements.txt`
+* Create a `.env` file. Populate it with:
+  * `USERNAME = <Your MYSQL User>`
+  * `PASSWORD = <Your MYSQL Password>`
+  * `HOST = 127.0.0.1`
+  * `DB = finalProj_workorder`
+* Run the `schema.sql` file, then the `sampleData.sql` file to populate the tables.
+* Finally, run the server with `python src/main.py`, from project root.
+
+Upon completing these instructions, the query-able server will be running on `localhost`,
+available for queries.
+
+---
+
 ### Who is using this?
 - Admin
   - Youth pastors
