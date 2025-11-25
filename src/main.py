@@ -7,6 +7,11 @@ from fastapi import FastAPI
 import mysql.connector
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
+
+## PYDANTIC ##
+class Query(BaseModel):
+    query: str
 
 ## SQL FUNCTIONS ##
 def connect_sql():
@@ -46,9 +51,9 @@ def main():
     return {"message": "CS125 Paper Youth Group DB",
             "note": "THIS IS A FAKE DATABASE FOR LEARNING PURPOSES ONLY"}
 
-@app.get("/query/{statement}")
-async def query(statement: str):
-    response = ask_db(statement)
+@app.get("/query")
+async def query(q: Query):
+    response = ask_db(q.query)
     return response
 
 ## MAIN ##
