@@ -82,19 +82,19 @@ INSERT INTO NoteItem (Id, writerId, meetingId, textContent) VALUES
 (307, 9, 105, 'Parents requested allergy-friendly snacks.');
 
 -- ===== ATTENDANCE =====
-INSERT INTO attendanceItem (id, signupId, STATUS) VALUES
-(401, 201, 'P'),
-(402, 202, 'A'),
-(403, 203, 'P'),
-(404, 204, 'P'),
-(405, 205, 'P'),
-(406, 206, 'P'),
-(407, 207, 'P'),
-(408, 208, 'P'),
-(409, 209, 'A'),
-(410, 210, 'P'),
-(411, 211, 'P'),
-(412, 212, 'P');
+# INSERT INTO attendanceItem (id, signupId, STATUS) VALUES
+# (401, 201, 'P'),
+# (402, 202, 'A'),
+# (403, 203, 'P'),
+# (404, 204, 'P'),
+# (405, 205, 'P'),
+# (406, 206, 'P'),
+# (407, 207, 'P'),
+# (408, 208, 'P'),
+# (409, 209, 'A'),
+# (410, 210, 'P'),
+# (411, 211, 'P'),
+# (412, 212, 'P');
 
 -- ===== SMALL GROUP =====
 INSERT INTO smallGroup (meetId, nextMeetingDate) VALUES
