@@ -38,7 +38,8 @@ CREATE TABLE Admin(
 
 CREATE TABLE Meeting(
     meetId INT PRIMARY KEY,
-    title VARCHAR(100) NOT NULL
+    title VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL ##added
 );
 
 CREATE TABLE MeetingSignUpItem(
@@ -79,16 +80,24 @@ CREATE TABLE smallGroup(
     FOREIGN KEY (meetId) REFERENCES Meeting(meetId)
     ON DELETE CASCADE
 );
+CREATE TABLE eventType(
+    typeId INT PRIMARY KEY AUTO_INCREMENT,
+    typeName VARCHAR(50),
+    description VARCHAR(100)
+
+);
 
 CREATE TABLE Event(
     meetId INT NOT NULL,
     createdByID INT NOT NULL,
-    type VARCHAR(50) NOT NULL,
+    typeId INT NOT NULL, ## changed
     location VARCHAR(100) NOT NULL,
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
     FOREIGN KEY (meetID) REFERENCES Meeting(meetId)
     ON DELETE CASCADE,
     FOREIGN KEY (createdByID) REFERENCES Person(personId)
-    ON DELETE RESTRICT
+    ON DELETE RESTRICT,
+    FOREIGN KEY (typeID) REFERENCES eventType(typeId)
 );
+
