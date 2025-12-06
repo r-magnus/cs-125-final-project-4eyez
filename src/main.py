@@ -2,7 +2,7 @@
 # Ryan Magnuson <rmagnuson@westmont.edu>
 ## SETUP ##
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -14,6 +14,9 @@ from event import router as event_router
 ## API ##
 app = FastAPI()
 app.include_router(event_router)
+import redis
+from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
+from mysql_connect import connect_sql
 
 ## PYDANTIC ##
 class Query(BaseModel):
@@ -35,18 +38,23 @@ MONGO_URI = None
 
 
 ## SQL FUNCTIONS ##
-def connect_sql():
-    global cnx
-    try:
-        cnx = mysql.connector.connect(
-            user=USERNAME,
-            password=PASSWORD,
-            host=HOST,
-            database=DB
-        )
-        return cnx
-    except Exception as e:
-        print(f"Error connecting to DB: {e}")
+# def connect_sql():
+#     global cnx
+#     try:
+#         cnx = mysql.connector.connect(
+#             user=USERNAME,
+#             password=PASSWORD,
+#             host=HOST,
+#             database=DB
+#         )
+#         return cnx
+#     except Exception as e:
+#         print(f"Error connecting to DB: {e}")
+# class AttendanceItem(BaseModel):
+#     event_id: int
+#     student_id: int | None = None
+
+## SQL FUNCTIONS ##
 
 def ask_db(q: str):
     """
@@ -114,14 +122,44 @@ def test_mongo():
 if __name__ == '__main__':
 
     load_dotenv()
+# Redis #
+@app.post("/attendance/{ep}")
+async def redis_post(ep: str, a: AttendanceItem):
+    """
+    Handles posts to Redis, where "ep" is "endpoint"
+    """
+    if ep == "checkin":
+        checkin(r, a.event_id, a.student_id)
+    elif ep == "checkout":
+        checkout(r, a.event_id, a.student_id)
+    elif ep == "end_event":
+        end_event(r, a.event_id)
+    else:
+        raise HTTPException(status_code=404, detail="Page not found")
 
-    USERNAME = os.getenv("USERNAME")
-    PASSWORD = os.getenv("PASSWORD")
+@app.get("/attendance/{ep}")
+async def redis_get(ep: str, a: AttendanceItem):
+    """
+    Handles "get" requests from Redis, where "ep" is "endpoint"
+    """
+    if ep == "get":
+        return get_attendance(r, a.event_id) # student_id unneeded (?)
+    elif ep == "get_count":
+        return get_attendance_count(r, a.event_id)
+    else:
+        raise HTTPException(status_code=404, detail="Page not found")
+
+## MAIN ##
+if __name__ == '__main__':
+    cnx = connect_sql()
+    r = redis_connect()
+
     HOST = os.getenv("HOST")
     DB = os.getenv("DB")
     MONGO_URI = os.getenv("MONGO_URI")
-    cnx = connect_sql()
+    # cnx = connect_sql()
     connect_mongo()
+
     uvicorn.run(app, host=HOST, port=8000)
 
 
