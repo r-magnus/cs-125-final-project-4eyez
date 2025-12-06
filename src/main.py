@@ -3,28 +3,24 @@
 
 ## SETUP ##
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import mysql.connector
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
+import redis
+from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
+from mysql_connect import connect_sql
 
 ## PYDANTIC ##
 class Query(BaseModel):
     query: str
 
+class AttendanceItem(BaseModel):
+    event_id: int
+    student_id: int | None = None
+
 ## SQL FUNCTIONS ##
-def connect_sql():
-    try:
-        cnx = mysql.connector.connect(
-            user=USERNAME,
-            password=PASSWORD,
-            host=HOST,
-            database=DB
-        )
-        return cnx
-    except Exception as e:
-        print(f"Error connecting to DB: {e}")
 
 def ask_db(q: str):
     """
@@ -56,16 +52,39 @@ async def query(q: Query):
     response = ask_db(q.query)
     return response
 
+# Redis #
+@app.post("/attendance/{ep}")
+async def redis_post(ep: str, a: AttendanceItem):
+    """
+    Handles posts to Redis, where "ep" is "endpoint"
+    """
+    if ep == "checkin":
+        checkin(r, a.event_id, a.student_id)
+    elif ep == "checkout":
+        checkout(r, a.event_id, a.student_id)
+    elif ep == "end_event":
+        end_event(r, a.event_id)
+    else:
+        raise HTTPException(status_code=404, detail="Page not found")
+
+@app.get("/attendance/{ep}")
+async def redis_get(ep: str, a: AttendanceItem):
+    """
+    Handles "get" requests from Redis, where "ep" is "endpoint"
+    """
+    if ep == "get":
+        return get_attendance(r, a.event_id) # student_id unneeded (?)
+    elif ep == "get_count":
+        return get_attendance_count(r, a.event_id)
+    else:
+        raise HTTPException(status_code=404, detail="Page not found")
+
 ## MAIN ##
 if __name__ == '__main__':
-    load_dotenv()
-
-    USERNAME = os.getenv("USERNAME")
-    PASSWORD = os.getenv("PASSWORD")
-    HOST = os.getenv("HOST")
-    DB = os.getenv("DB")
-
     cnx = connect_sql()
+    r = redis_connect()
+
+    HOST = os.getenv("HOST")
 
     uvicorn.run(app, host=HOST, port=8000)
 

@@ -66,10 +66,10 @@ CREATE TABLE NoteItem(
 );
 
 CREATE TABLE attendanceItem(
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     signupId INT NOT NULL,
-    STATUS CHAR(1) NOT NULL,
-    FOREIGN KEY (signupId) REFERENCES MeetingSignUpItem(id)
+    STATUS VARCHAR(10) NOT NULL,
+    FOREIGN KEY (signupId) REFERENCES MeetingSignUpItem(signeeId)
     ON DELETE CASCADE
 );
 
