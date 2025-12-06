@@ -50,9 +50,9 @@ MONGO_URI = None
 #         return cnx
 #     except Exception as e:
 #         print(f"Error connecting to DB: {e}")
-# class AttendanceItem(BaseModel):
-#     event_id: int
-#     student_id: int | None = None
+class AttendanceItem(BaseModel):
+    event_id: int
+    student_id: int | None = None
 
 ## SQL FUNCTIONS ##
 
