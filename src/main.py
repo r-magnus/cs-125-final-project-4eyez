@@ -8,15 +8,18 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pymongo import MongoClient
-
 from event import router as event_router
+from strawberry.fastapi import GraphQLRouter
+from graphql_schema.schema import custom_schema
+import redis
+from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
+from mysql_connect import connect_sql
 
 ## API ##
 app = FastAPI()
 app.include_router(event_router)
-import redis
-from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
-from mysql_connect import connect_sql
+graphql_app = GraphQLRouter(custom_schema)
+app.include_router(graphql_app, prefix="/graphql")
 
 ## PYDANTIC ##
 class Query(BaseModel):
