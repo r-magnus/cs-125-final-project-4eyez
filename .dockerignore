@@ -1,0 +1,11 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+
+# Python
+__pycache__
+.venv
+.env
