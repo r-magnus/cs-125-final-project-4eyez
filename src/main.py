@@ -9,12 +9,12 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pymongo import MongoClient
-from event import router as event_router
+from src.event import router as event_router
 from strawberry.fastapi import GraphQLRouter
-from graphql_schema.schema import custom_schema
+from src.graphql_schema.schema import custom_schema
 import redis
-from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
-from mysql_connect import connect_sql
+from src.attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
+from src.mysql_connect import connect_sql
 
 ## API ##
 app = FastAPI()
@@ -109,7 +109,34 @@ def connect_mongo():
         return mongo_client, mongo_db, event_types_col, event_custom_col
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
-        raise
+
+
+##connect##
+@app.on_event("startup")
+def startup_event():
+    """
+    This runs when uvicorn starts (including in Docker).
+    Initializes env, MySQL, Redis, and Mongo.
+    """
+    global cnx, r, MONGO_URI
+
+    load_dotenv()
+    MONGO_URI = os.getenv("MONGO_URI")
+
+    # MySQL
+    cnx = connect_sql()
+    if cnx:
+        print(" Connected to MySQL in startup_event")
+    else:
+        print(" Failed to connect to MySQL in startup_event")
+
+    # Redis
+    r = redis_connect()
+    print(" Connected to Redis in startup_event")
+
+    # Mongo
+    connect_mongo()
+
 
 
 ##END POINTS##
@@ -142,7 +169,7 @@ async def events(ep: str, event: EventItem):
         JOIN MeetingSignUpItem m ON m.signeeId = p.personId
         WHERE m.meetingId = %s
         """
-        crs.execute(q, event.event_id)
+        crs.execute(q, (event.event_id,))
         res = crs.fetchall()
         crs.close()
         return res
@@ -231,17 +258,21 @@ async def redis_get(ep: str, a: AttendanceItem):
         raise HTTPException(status_code=404, detail="Page not found")
 
 ## MAIN ##
-if __name__ == '__main__':
-    load_dotenv()
-    cnx = connect_sql()
-    r = redis_connect()
+# if __name__ == '__main__':
+#     load_dotenv()
+#     cnx = connect_sql()
+#     r = redis_connect()
+#
+#     HOST = os.getenv("HOST")
+#     DB = os.getenv("DB")
+#     MONGO_URI = os.getenv("MONGO_URI")
+#     # cnx = connect_sql()
+#     connect_mongo()
+#
+#     uvicorn.run(app, host=HOST, port=8000)
 
-    HOST = os.getenv("HOST")
-    DB = os.getenv("DB")
-    MONGO_URI = os.getenv("MONGO_URI")
-    # cnx = connect_sql()
-    connect_mongo()
+if __name__ == "__main__":
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
 
-    uvicorn.run(app, host=HOST, port=8000)
 
 
