@@ -3,6 +3,7 @@
 ## SETUP ##
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -17,6 +18,15 @@ from mysql_connect import connect_sql
 
 ## API ##
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(event_router)
 graphql_app = GraphQLRouter(custom_schema)
 app.include_router(graphql_app, prefix="/graphql")
