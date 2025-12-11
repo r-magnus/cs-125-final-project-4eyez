@@ -55,7 +55,7 @@ def connect_mongo():
         return event_type, custom_event
     except Exception as e:
         print(f"Error connecting to MongoDB: {e}")
-        raise HTTPException(status_code=500, detail="MongoDB connection failed")
+
 
 
 ## Pydantic model

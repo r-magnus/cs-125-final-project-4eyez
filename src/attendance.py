@@ -3,7 +3,7 @@
 import redis
 import mysql.connector
 import os
-from mysql_connect import connect_sql
+from src.mysql_connect import connect_sql
 
 def redis_connect():
     try:
