@@ -83,7 +83,6 @@ CREATE TABLE eventType(
     typeId INT PRIMARY KEY AUTO_INCREMENT,
     typeName VARCHAR(50),
     description VARCHAR(100)
-
 );
 
 CREATE TABLE Event(

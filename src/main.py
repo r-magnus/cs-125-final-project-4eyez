@@ -8,20 +8,25 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pymongo import MongoClient
-
-
 from event import router as event_router
-
-## API ##
-app = FastAPI()
-app.include_router(event_router)
+from strawberry.fastapi import GraphQLRouter
+from graphql_schema.schema import custom_schema
 import redis
 from attendance import redis_connect, checkin, checkout, get_attendance, get_attendance_count, end_event
 from mysql_connect import connect_sql
 
+## API ##
+app = FastAPI()
+app.include_router(event_router)
+graphql_app = GraphQLRouter(custom_schema)
+app.include_router(graphql_app, prefix="/graphql")
+
 ## PYDANTIC ##
 class Query(BaseModel):
     query: str
+
+class EventItem(BaseModel):
+    event_id: int
 
 
 ##GLOBALS##
@@ -38,6 +43,19 @@ DB = None
 MONGO_URI = None
 
 
+## SQL FUNCTIONS ##
+# def connect_sql():
+#     global cnx
+#     try:
+#         cnx = mysql.connector.connect(
+#             user=USERNAME,
+#             password=PASSWORD,
+#             host=HOST,
+#             database=DB
+#         )
+#         return cnx
+#     except Exception as e:
+#         print(f"Error connecting to DB: {e}")
 class AttendanceItem(BaseModel):
     event_id: int
     student_id: int | None = None
@@ -90,10 +108,79 @@ def main():
     return {"message": "CS125 Paper Youth Group DB",
             "note": "THIS IS A FAKE DATABASE FOR LEARNING PURPOSES ONLY"}
 
-@app.get("/query")
-async def query(q: Query):
-    response = ask_db(q.query)
-    return response
+# @app.get("/query")
+# async def query(q: Query):
+#     response = ask_db(q.query)
+#     return response
+
+@app.get("/events/{ep}")
+async def events(ep: str, event: EventItem):
+    crs = cnx.cursor()
+    if ep == "get_active":
+        q = """
+        SELECT * FROM Event e
+        WHERE e.endDate > CURRENT_DATE()
+        """
+        crs.execute(q)
+        res = crs.fetchall()
+        crs.close()
+        return res
+
+    elif ep == "get_signees":
+        q = """
+        SELECT * FROM Person p
+        JOIN MeetingSignUpItem m ON m.signeeId = p.personId
+        WHERE m.meetingId = %s
+        """
+        crs.execute(q, event.event_id)
+        res = crs.fetchall()
+        crs.close()
+        return res
+
+    elif ep == "get_author":
+        q = """
+        SELECT * FROM Person p
+        JOIN Event e ON e.createdByID = p.personId
+        WHERE e.meetId = %s
+        """
+        crs.execute(q, event.event_id)
+        res = crs.fetchall()
+        crs.close()
+        return res
+
+@app.get("/people/{ep}")
+async def people(ep: str):
+    crs = cnx.cursor()
+    if ep == "students":
+        q = """
+        SELECT * FROM Student s
+        JOIN Person p ON s.personId = p.personId
+        WHERE s.personId = p.personId
+        """
+        crs.execute(q)
+        res = crs.fetchall()
+        crs.close()
+        return res
+    elif ep == "volunteers":
+        q = """
+        SELECT * FROM Volunteer s
+        JOIN Person p ON s.personId = p.personId
+        WHERE s.personId = p.personId
+        """
+        crs.execute(q)
+        res = crs.fetchall()
+        crs.close()
+        return res
+    elif ep == "admins":
+        q = """
+        SELECT * FROM Admin s
+        JOIN Person p ON s.personId = p.personId
+        WHERE s.personId = p.personId
+        """
+        crs.execute(q)
+        res = crs.fetchall()
+        crs.close()
+        return res
 
 
 @app.get("/test-mongo")

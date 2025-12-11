@@ -19,11 +19,34 @@ The final project for CS125, combining a whole lot of DBs for a youth group even
   * `PASSWORD = <Your MYSQL Password>`
   * `HOST = 127.0.0.1`
   * `DB = finalProj_workorder`
+  * `REDIS_HOST = <Your Redis Host URL>`
+  * `REDIS_PORT = <Your Redis Host's PORT>`
+  * `REDIS_PASS = <Your Redis Password>`
+  * `MONGO_URI = <Your MongoDB URI>`
+
 * Run the `schema.sql` file, then the `sampleData.sql` file to populate the tables.
 * Finally, run the server with `python src/main.py`, from project root.
 
 Upon completing these instructions, the query-able server will be running on `localhost`,
 available for queries.
+
+**IF YOU'RE USING DOCKER:**
+
+Use:
+```
+docker run -d -p 8000:8000 \
+-e HOST="your_mysql_host" \
+-e DB="your_mysql_database" \
+-e USERNAME="your_mysql_username" \
+-e PASSWORD="your_mysql_password" \
+-e REDIS_HOST="your_redis_host_url" \
+-e REDIS_PORT="your_redis_port" \
+-e REDIS_PASS="your_redis_pass" \
+-e MONGO_URI="your_mongo_uri" \
+--name cs125-app cs125-final-project
+```
+
+...For running the application package with your environment variables.
 
 ---
 
