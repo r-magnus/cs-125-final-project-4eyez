@@ -30,7 +30,7 @@ The final project for CS125, combining a whole lot of DBs for a youth group even
 Upon completing these instructions, the query-able server will be running on `localhost`,
 available for queries.
 
-IF YOU'RE IN DOCKER:
+**IF YOU'RE USING DOCKER:**
 
 Use:
 ```
