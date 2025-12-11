@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from pymongo import MongoClient
 
+
 from event import router as event_router
 
 ## API ##
@@ -37,22 +38,9 @@ DB = None
 MONGO_URI = None
 
 
-## SQL FUNCTIONS ##
-# def connect_sql():
-#     global cnx
-#     try:
-#         cnx = mysql.connector.connect(
-#             user=USERNAME,
-#             password=PASSWORD,
-#             host=HOST,
-#             database=DB
-#         )
-#         return cnx
-#     except Exception as e:
-#         print(f"Error connecting to DB: {e}")
-# class AttendanceItem(BaseModel):
-#     event_id: int
-#     student_id: int | None = None
+class AttendanceItem(BaseModel):
+    event_id: int
+    student_id: int | None = None
 
 ## SQL FUNCTIONS ##
 
@@ -72,7 +60,7 @@ def ask_db(q: str):
     except Exception as e:
         print(f"Error with query: {e}")
 
-##MONGODB##
+#MONGODB##
 
 def connect_mongo():
     global mongo_client,mongo_db,event_types_col,event_custom_col

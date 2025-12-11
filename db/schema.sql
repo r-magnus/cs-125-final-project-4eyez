@@ -38,8 +38,7 @@ CREATE TABLE Admin(
 
 CREATE TABLE Meeting(
     meetId INT PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL ##added
+    title VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE MeetingSignUpItem(
@@ -90,7 +89,7 @@ CREATE TABLE eventType(
 CREATE TABLE Event(
     meetId INT NOT NULL,
     createdByID INT NOT NULL,
-    typeId INT NOT NULL, ## changed
+    typeId INT NOT NULL,
     location VARCHAR(100) NOT NULL,
     startDate DATE NOT NULL,
     endDate DATE NOT NULL,
