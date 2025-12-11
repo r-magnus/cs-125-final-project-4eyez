@@ -1,3 +1,5 @@
+
+
 DROP DATABASE IF EXISTS finalProj_workorder;
 CREATE DATABASE finalProj_workorder;
 USE finalProj_workorder;
@@ -96,6 +98,6 @@ CREATE TABLE Event(
     ON DELETE CASCADE,
     FOREIGN KEY (createdByID) REFERENCES Person(personId)
     ON DELETE RESTRICT,
-    FOREIGN KEY (typeID) REFERENCES eventType(typeId)
+    FOREIGN KEY (typeId) REFERENCES eventType(typeId)
 );
 

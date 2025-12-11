@@ -203,10 +203,6 @@ def test_mongo():
     except Exception as e:
         return {"error": str(e)}
 
-## MAIN ##
-if __name__ == '__main__':
-
-    load_dotenv()
 # Redis #
 @app.post("/attendance/{ep}")
 async def redis_post(ep: str, a: AttendanceItem):
@@ -236,6 +232,7 @@ async def redis_get(ep: str, a: AttendanceItem):
 
 ## MAIN ##
 if __name__ == '__main__':
+    load_dotenv()
     cnx = connect_sql()
     r = redis_connect()
 

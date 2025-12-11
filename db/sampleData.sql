@@ -101,10 +101,18 @@ INSERT INTO smallGroup (meetId, nextMeetingDate) VALUES
 (103, '2025-01-20'),
 (104, '2025-02-01');
 
+-- ===== EVENT TYPES =====
+INSERT INTO eventType (typeId, typeName, description) VALUES
+(1, 'Parent Meeting', 'Meetings organized for parents.'),
+(2, 'Training Session', 'Sessions to train volunteers or staff.'),
+(3, 'Small Group Activity', 'Activities for small groups.'),
+(4, 'Fundraiser', 'Events to raise funds.'),
+(5, 'Community Celebration', 'Celebrations for the community.');
+
 -- ===== EVENT =====
-INSERT INTO Event (meetId, createdByID, type, location, startDate, endDate) VALUES
-(102, 1, 'Training Session', 'Community Center Room B', '2025-02-05', '2025-02-05'),
-(101, 3, 'Parent Meeting', 'School Library', '2025-01-10', '2025-01-10'),
-(103, 7, 'Small Group Activity', 'Public Park Pavilion', '2025-01-15', '2025-01-15'),
-(104, 3, 'Fundraiser', 'Gymnasium Hall', '2025-02-10', '2025-02-10'),
-(105, 7, 'Community Celebration', 'School Courtyard', '2025-05-18', '2025-05-18');
+INSERT INTO Event (meetId, createdByID, typeId, location, startDate, endDate) VALUES
+(102, 1, 2, 'Community Center Room B', '2025-02-05', '2025-02-05'), -- Training Session
+(101, 3, 1, 'School Library', '2025-01-10', '2025-01-10'), -- Parent Meeting
+(103, 7, 3, 'Public Park Pavilion', '2025-01-15', '2025-01-15'), -- Small Group Activity
+(104, 3, 4, 'Gymnasium Hall', '2025-02-10', '2025-02-10'), -- Fundraiser
+(105, 7, 5, 'School Courtyard', '2025-05-18', '2025-05-18');

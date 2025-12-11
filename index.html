@@ -18,6 +18,18 @@
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        .user-sim-toolbar {
+            background-color: black;
+            color: white;
+            padding: 5px;
+            width: 100%;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
         body {
             background: linear-gradient(135deg, var(--background-start), var(--background-end));
             color: var(--text-color);
@@ -28,6 +40,7 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            margin-top: 40px; /* Adjust for the toolbar */
         }
 
         header {
@@ -79,38 +92,37 @@
             display: block;
         }
         
-        h2 {
+        h2, h3 {
             color: var(--primary-color);
             border-bottom: 1px solid var(--secondary-color);
             padding-bottom: 0.5rem;
         }
 
-        .person-grid {
+        .person-grid, .event-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
         }
 
-        .person-card {
+        .person-card, .event-card {
             background-color: var(--card-background);
             color: var(--card-text);
             border-radius: 8px;
             box-shadow: 0 4px 8px var(--shadow-color);
             padding: 1rem;
-            text-align: center;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .person-card:hover {
+        .person-card:hover, .event-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 16px var(--shadow-color);
         }
-
+        
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
+            z-index: 1001;
             left: 0;
             top: 0;
             width: 100%;
@@ -122,7 +134,7 @@
         .modal-content {
             background-color: var(--card-background);
             color: var(--card-text);
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 2rem;
             border: 1px solid var(--accent-color);
             width: 80%;
@@ -131,8 +143,21 @@
             position: relative;
         }
         
-        .modal-content h2 {
-            color: var(--secondary-color);
+        .modal-content h2 { color: var(--secondary-color); }
+        .modal-content label { display: block; margin-top: 1rem; }
+        .modal-content input, .modal-content select, .modal-content button {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .modal-content button {
+            background-color: var(--primary-color);
+            color: var(--card-text);
+            border: none;
+            cursor: pointer;
+            margin-top: 1rem;
         }
 
         .close-button {
@@ -145,15 +170,28 @@
             right: 20px;
         }
 
-        .close-button:hover,
-        .close-button:focus {
+        .close-button:hover, .close-button:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
+
+        #delete-event-btn {
+            background-color: #e57373;
+            color: white;
+        }
     </style>
 </head>
 <body>
+
+    <div class="user-sim-toolbar">
+        <strong>User Role:</strong>
+        <button data-role="Admin">Admin</button>
+        <button data-role="Guardian">Guardian</button>
+        <button data-role="Student">Student</button>
+        <button data-role="Volunteer">Volunteer</button>
+        <span id="current-user-role" style="margin-left: 20px;"></span>
+    </div>
 
     <header>
         <nav>
@@ -164,158 +202,464 @@
 
     <main>
         <div id="people-page" class="page active">
-            <section id="students-section">
-                <h2>Students</h2>
-                <div id="students-grid" class="person-grid"></div>
-            </section>
-            <section id="volunteers-section">
-                <h2>Volunteers</h2>
-                <div id="volunteers-grid" class="person-grid"></div>
-            </section>
-            <section id="admins-section">
-                <h2>Admins</h2>
-                <div id="admins-grid" class="person-grid"></div>
-            </section>
+            <section><h2>Students</h2><div id="students-grid" class="person-grid"></div></section>
+            <section><h2>Volunteers</h2><div id="volunteers-grid" class="person-grid"></div></section>
+            <section><h2>Admins</h2><div id="admins-grid" class="person-grid"></div></section>
         </div>
 
         <div id="events-page" class="page">
-            <h2>Events</h2>
-            <p>Event management coming soon!</p>
+            <div id="event-list-container">
+                <h2>Events</h2>
+                <section><h3>Upcoming Events</h3><div id="upcoming-events" class="event-list"></div></section>
+                <section><h3>Current Events</h3><div id="current-events" class="event-list"></div></section>
+                <section id="past-events-section" style="display: none;"><h3>Past Events</h3><div id="past-events" class="event-list"></div></section>
+                <button id="create-event-btn" style="display: none; margin-top: 1rem;">Create New Event</button>
+            </div>
+            <div id="event-details-container" style="display: none;">
+                <button id="back-to-events">&larr; Back to Events</button>
+                <h2 id="event-details-title"></h2>
+                <div id="event-details-body"></div>
+            </div>
         </div>
     </main>
 
-    <div id="person-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <div id="modal-body"></div>
-        </div>
-    </div>
+    <div id="person-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="modal-body"></div></div></div>
+    <div id="create-event-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Create Event</h2><form id="create-event-form"></form></div></div>
+    <div id="create-event-type-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Create Event Type</h2><form id="create-event-type-form"></form></div></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- State ---
+            let currentUserRole = 'Student';
+            let currentUserId = 2;
+            let allPeople = [];
+            let allEventTypes = [];
+
+            // --- Elements ---
+            const mainContent = document.querySelector('main');
             const navPeople = document.getElementById('nav-people');
             const navEvents = document.getElementById('nav-events');
             const peoplePage = document.getElementById('people-page');
             const eventsPage = document.getElementById('events-page');
-            const modal = document.getElementById('person-modal');
-            const closeModal = document.querySelector('.close-button');
-            const modalBody = document.getElementById('modal-body');
+            const userSimToolbar = document.querySelector('.user-sim-toolbar');
+            const currentUserRoleSpan = document.getElementById('current-user-role');
+            const createEventBtn = document.getElementById('create-event-btn');
+            const pastEventsSection = document.getElementById('past-events-section');
+            const eventListContainer = document.getElementById('event-list-container');
+            const eventDetailsContainer = document.getElementById('event-details-container');
+            const backToEventsBtn = document.getElementById('back-to-events');
+            const createEventModal = document.getElementById('create-event-modal');
+            const createEventTypeModal = document.getElementById('create-event-type-modal');
 
-            // --- Navigation ---
-            function showPage(pageId) {
-                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-                document.getElementById(pageId).classList.add('active');
-                
-                document.querySelectorAll('nav a').forEach(link => link.classList.remove('active'));
-                if (pageId === 'people-page') {
-                    navPeople.classList.add('active');
-                } else {
-                    navEvents.classList.add('active');
-                }
-            }
-
-            navPeople.addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('people-page');
-            });
-
-            navEvents.addEventListener('click', (e) => {
-                e.preventDefault();
-                showPage('events-page');
-            });
-
-            // --- Modal ---
-            closeModal.addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
-            window.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-
-            function showModal(person, type) {
-                modalBody.innerHTML = ''; // Clear previous content
-                const title = document.createElement('h2');
-                title.textContent = `${person.firstName} ${person.lastName}`;
-                
-                const info = document.createElement('p');
-                let roleInfo = `Role: ${type}`;
-                if (type === 'Student' && person.grade) {
-                    roleInfo += `<br>Grade: ${person.grade}`;
-                }
-                
-                info.innerHTML = `ID: ${person.personId}<br>${roleInfo}`;
-
-                modalBody.appendChild(title);
-                modalBody.appendChild(info);
-                modal.style.display = 'block';
-            }
-            
-            // --- GraphQL Fetching ---
+            // --- GraphQL ---
             const GQL_ENDPOINT = 'http://127.0.0.1:8000/graphql';
-
-            async function fetchGraphQL(query) {
+            async function fetchGraphQL(query, variables = {}) {
                 try {
                     const response = await fetch(GQL_ENDPOINT, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ query })
+                        body: JSON.stringify({ query, variables })
                     });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const json = await response.json();
-                    if (json.errors) {
-                        throw new Error(`GraphQL error: ${json.errors.map(e => e.message).join(', ')}`);
-                    }
+                    if (json.errors) throw new Error(`GraphQL error: ${json.errors.map(e => e.message).join(', ')}`);
                     return json.data;
                 } catch (error) {
                     console.error('Failed to fetch from GraphQL endpoint:', error);
-                    // Display error to the user on the page
-                    document.querySelector('main').innerHTML = `<p style="color: red;">Error loading data. Is the server running at ${GQL_ENDPOINT}? Details: ${error.message}</p>`;
+                    mainContent.innerHTML = `<p style="color: red;">Error loading data. Is the server running? Details: ${error.message}</p>`;
                     return null;
                 }
             }
 
-            function createPersonCard(person, type) {
-                const card = document.createElement('div');
-                card.className = 'person-card';
-                card.textContent = `${person.firstName} ${person.lastName}`;
-                card.addEventListener('click', () => showModal(person, type));
-                return card;
+            // --- User Role Simulation ---
+            function updateUserRole(newRole) {
+                currentUserRole = newRole;
+                if (newRole === 'Admin') currentUserId = 1;
+                else if (newRole === 'Guardian') currentUserId = 4;
+                else if (newRole === 'Volunteer') currentUserId = 3;
+                else currentUserId = 2;
+                currentUserRoleSpan.textContent = `Current: ${currentUserRole} (ID: ${currentUserId})`;
+                updateUIForRole();
+                if (eventsPage.classList.contains('active')) {
+                    if (eventDetailsContainer.style.display === 'block') {
+                        const currentMeetId = eventDetailsContainer.dataset.meetId;
+                        if (currentMeetId) showEventDetails(parseInt(currentMeetId));
+                    } else {
+                        loadEvents();
+                    }
+                }
             }
 
+            function updateUIForRole() {
+                createEventBtn.style.display = currentUserRole === 'Admin' ? 'block' : 'none';
+                pastEventsSection.style.display = currentUserRole === 'Admin' ? 'block' : 'none';
+            }
+            userSimToolbar.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' && e.target.dataset.role) {
+                    updateUserRole(e.target.dataset.role);
+                }
+            });
+
+            // --- Navigation & Page/View Switching ---
+            function showPage(pageId) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+                document.getElementById(pageId === 'people-page' ? 'nav-people' : 'nav-events').classList.add('active');
+                if (pageId === 'events-page') {
+                    eventListContainer.style.display = 'block';
+                    eventDetailsContainer.style.display = 'none';
+                    loadEvents();
+                }
+            }
+            navPeople.addEventListener('click', (e) => { e.preventDefault(); showPage('people-page'); });
+            navEvents.addEventListener('click', (e) => { e.preventDefault(); showPage('events-page'); });
+            backToEventsBtn.addEventListener('click', () => {
+                eventDetailsContainer.style.display = 'none';
+                eventListContainer.style.display = 'block';
+            });
+
+            // --- Generic Modal Logic ---
+            document.querySelectorAll('.modal .close-button').forEach(btn => {
+                btn.addEventListener('click', () => btn.closest('.modal').style.display = 'none');
+            });
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+            });
+
+            // --- People Page ---
             async function loadPeople() {
-                const studentsQuery = '{ students { personId firstName lastName grade } }';
-                const volunteersQuery = '{ volunteers { personId firstName lastName } }';
-                const adminsQuery = '{ admins { personId firstName lastName } }';
-
-                const [studentData, volunteerData, adminData] = await Promise.all([
-                    fetchGraphQL(studentsQuery),
-                    fetchGraphQL(volunteersQuery),
-                    fetchGraphQL(adminsQuery)
-                ]);
-
-                if (studentData && studentData.students) {
-                    const grid = document.getElementById('students-grid');
-                    grid.innerHTML = '';
-                    studentData.students.forEach(s => grid.appendChild(createPersonCard(s, 'Student')));
-                }
-                if (volunteerData && volunteerData.volunteers) {
-                    const grid = document.getElementById('volunteers-grid');
-                    grid.innerHTML = '';
-                    volunteerData.volunteers.forEach(v => grid.appendChild(createPersonCard(v, 'Volunteer')));
-                }
-                if (adminData && adminData.admins) {
-                    const grid = document.getElementById('admins-grid');
-                    grid.innerHTML = '';
-                    adminData.admins.forEach(a => grid.appendChild(createPersonCard(a, 'Admin')));
+                const query = '{ students { personId firstName lastName grade } volunteers { personId firstName lastName } admins { personId firstName lastName } guardians { personId firstName lastName } }';
+                const data = await fetchGraphQL(query);
+                if (data) {
+                    allPeople = [
+                        ...data.students.map(p => ({...p, type: 'Student'})),
+                        ...data.volunteers.map(p => ({...p, type: 'Volunteer'})),
+                        ...data.admins.map(p => ({...p, type: 'Admin'})),
+                        ...data.guardians.map(p => ({...p, type: 'Guardian'}))
+                    ];
+                    ['students', 'volunteers', 'admins'].forEach(type => {
+                        const grid = document.getElementById(`${type}-grid`);
+                        grid.innerHTML = '';
+                        data[type].forEach(p => {
+                            const card = document.createElement('div');
+                            card.className = 'person-card';
+                            card.textContent = `${p.firstName} ${p.lastName}`;
+                            grid.appendChild(card);
+                        });
+                    });
                 }
             }
 
-            // Initial Load
+            // --- Event List Page ---
+            async function loadEvents() {
+                const query = '{ events { meetId title startDate endDate } }';
+                const data = await fetchGraphQL(query);
+                if (!data) return;
+                const upcomingGrid = document.getElementById('upcoming-events');
+                const currentGrid = document.getElementById('current-events');
+                const pastGrid = document.getElementById('past-events');
+                upcomingGrid.innerHTML = currentGrid.innerHTML = pastGrid.innerHTML = '';
+                const now = new Date();
+                data.events.forEach(event => {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    card.innerHTML = `<h4>${event.title}</h4><p>${event.startDate} to ${event.endDate}</p>`;
+                    card.addEventListener('click', () => showEventDetails(event.meetId));
+                    const startDate = new Date(event.startDate);
+                    if (new Date(event.endDate) < now) pastGrid.appendChild(card);
+                    else if (startDate > now) upcomingGrid.appendChild(card);
+                    else currentGrid.appendChild(card);
+                });
+            }
+
+            // --- Event Details Page ---
+            async function showEventDetails(meetId) {
+                eventListContainer.style.display = 'none';
+                eventDetailsContainer.style.display = 'block';
+                eventDetailsContainer.dataset.meetId = meetId;
+                const detailsBody = document.getElementById('event-details-body');
+                detailsBody.innerHTML = '<p>Loading details...</p>';
+
+                const eventsQuery = '{ events { meetId title location startDate endDate } }';
+                const signupsQuery = `query GetSignups($id: Int!) { signups(meetingId: $id) { id signeeId } }`;
+                
+                const [allEventsData, signupsData] = await Promise.all([
+                    fetchGraphQL(eventsQuery),
+                    fetchGraphQL(signupsQuery, { id: meetId })
+                ]);
+                
+                if (!allEventsData || !signupsData) return;
+
+                const event = allEventsData.events.find(e => e.meetId === meetId);
+                if (!event) { detailsBody.innerHTML = '<p>Error: Event not found.</p>'; return; }
+
+                const isPastEvent = new Date(event.endDate) < new Date();
+
+                document.getElementById('event-details-title').textContent = event.title;
+                detailsBody.innerHTML = `<p><strong>Location:</strong> ${event.location}</p><p><strong>Dates:</strong> ${event.startDate} - ${event.endDate}</p><hr><h3>Attendance</h3><div id="signup-list"></div><hr><div id="signup-controls"></div>`;
+
+                if (currentUserRole === 'Admin') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.id = 'delete-event-btn';
+                    deleteBtn.textContent = 'Delete Event';
+                    deleteBtn.onclick = () => deleteEvent(meetId);
+                    detailsBody.appendChild(deleteBtn);
+                }
+                
+                const signupList = document.getElementById('signup-list');
+                const signedUpIds = signupsData.signups.map(s => s.signeeId);
+
+                // Fetch appropriate attendance data
+                let attendanceMap = new Map();
+                if (isPastEvent && currentUserRole === 'Admin') {
+                    const pastAttendanceQuery = `query GetPastAtt($id: Int!) { pastAttendance(eventId: $id) { signeeId status } }`;
+                    const pastAttData = await fetchGraphQL(pastAttendanceQuery, { id: meetId });
+                    if (pastAttData && pastAttData.pastAttendance) {
+                        pastAttData.pastAttendance.forEach(item => attendanceMap.set(item.signeeId, item.status));
+                    }
+                } else if (!isPastEvent) {
+                    const liveAttendanceQuery = `query GetAtt($id: Int!) { attendance(eventId: $id) }`;
+                    const liveAttData = await fetchGraphQL(liveAttendanceQuery, { id: meetId });
+                    if (liveAttData && liveAttData.attendance) {
+                        liveAttData.attendance.forEach(id => attendanceMap.set(id, 'Checked In'));
+                    }
+                }
+
+                if (signedUpIds.length === 0) {
+                    signupList.innerHTML = '<p>No one is signed up for this event.</p>';
+                } else {
+                    allPeople.filter(p => signedUpIds.includes(p.personId)).forEach(p => {
+                        const item = document.createElement('div');
+                        const attendanceStatus = attendanceMap.get(p.personId) || 'Not Checked In';
+                        item.innerHTML = `${p.firstName} ${p.lastName} (${p.type}) - <strong>${attendanceStatus}</strong>`;
+                        
+                        const signupEntry = signupsData.signups.find(s => s.signeeId === p.personId);
+
+                        if (currentUserRole === 'Admin' && !isPastEvent) {
+                            const checkInBtn = document.createElement('button');
+                            const isCheckedIn = attendanceStatus === 'Checked In';
+                            checkInBtn.textContent = isCheckedIn ? 'Check Out' : 'Check In';
+                            checkInBtn.style.cssText = 'margin-left: 10px; width: auto;';
+                            checkInBtn.onclick = () => toggleCheckIn(meetId, p.personId, isCheckedIn);
+                            item.appendChild(checkInBtn);
+                        }
+                        
+                        // Don't show remove button for past events
+                        if (!isPastEvent && (currentUserRole === 'Admin' || (currentUserRole === 'Guardian' && p.type === 'Student') || (currentUserRole === 'Volunteer' && p.personId === currentUserId))) {
+                            const removeBtn = document.createElement('button');
+                            removeBtn.textContent = 'Remove Sign-up';
+                            removeBtn.style.cssText = 'margin-left: 10px; width: auto; background-color: #ffcccc;';
+                            removeBtn.onclick = () => removeSignUp(signupEntry.id, meetId);
+                            item.appendChild(removeBtn);
+                        }
+                        signupList.appendChild(item);
+                    });
+                }
+
+                if (!isPastEvent) {
+                    renderSignupControls(meetId, signedUpIds);
+                }
+            }
+            
+            async function deleteEvent(meetId) {
+                if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                    const mutation = `mutation DeleteEvent($id: Int!) { deleteEvent(meetId: $id) }`;
+                    const result = await fetchGraphQL(mutation, { id: meetId });
+                    if (result && result.deleteEvent) {
+                        alert('Event deleted successfully.');
+                        showPage('events-page');
+                    } else {
+                        alert('Error deleting event.');
+                    }
+                }
+            }
+
+            function renderSignupControls(meetId, signedUpIds) {
+                const signupControls = document.getElementById('signup-controls');
+                signupControls.innerHTML = '';
+                let peopleToShow = [];
+                let headingText = '';
+
+                switch (currentUserRole) {
+                    case 'Admin':
+                        headingText = 'Sign Up a Person';
+                        peopleToShow = allPeople.filter(p => (p.type === 'Student' || p.type === 'Volunteer') && !signedUpIds.includes(p.personId));
+                        break;
+                    case 'Guardian':
+                        headingText = 'Sign Up Your Students';
+                        peopleToShow = allPeople.filter(p => p.type === 'Student' && !signedUpIds.includes(p.personId));
+                        break;
+                    case 'Volunteer':
+                        if (!signedUpIds.includes(currentUserId)) {
+                            const selfSignupBtn = document.createElement('button');
+                            selfSignupBtn.textContent = 'Sign Up Myself';
+                            selfSignupBtn.onclick = () => signUpForEvent(meetId, currentUserId);
+                            signupControls.appendChild(selfSignupBtn);
+                        }
+                        return;
+                }
+
+                if (peopleToShow.length > 0) {
+                    const heading = document.createElement('h4');
+                    heading.textContent = headingText;
+                    const select = document.createElement('select');
+                    peopleToShow.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.personId;
+                        option.textContent = `${p.firstName} ${p.lastName} (${p.type})`;
+                        select.appendChild(option);
+                    });
+                    const btn = document.createElement('button');
+                    btn.textContent = 'Sign Up';
+                    btn.onclick = () => signUpForEvent(meetId, parseInt(select.value));
+                    signupControls.appendChild(heading);
+                    signupControls.appendChild(select);
+                    signupControls.appendChild(btn);
+                }
+            }
+
+            async function toggleCheckIn(meetId, studentId, isCheckedIn) {
+                const mutationName = isCheckedIn ? 'checkout' : 'checkin';
+                const mutation = `mutation CheckInOut($eventId: Int!, $studentId: Int!) { ${mutationName}(eventId: $eventId, studentId: $studentId) }`;
+                if (await fetchGraphQL(mutation, { eventId: meetId, studentId })) showEventDetails(meetId);
+            }
+
+            async function signUpForEvent(meetId, personId) {
+                const mutation = `mutation SignUp($meetId: Int!, $personId: Int!, $signedUpBy: Int!) { signUpForEvent(meetingId: $meetId, signeeId: $personId, signedUpById: $signedUpBy) { id } }`;
+                if (await fetchGraphQL(mutation, { meetId, personId, signedUpBy: currentUserId })) showEventDetails(meetId);
+            }
+
+            async function removeSignUp(signupId, meetId) {
+                const mutation = `mutation RemoveSignUp($signupId: Int!) { removeSignUp(signupId: $signupId) }`;
+                if (await fetchGraphQL(mutation, { signupId })) showEventDetails(meetId);
+            }
+
+            // --- Event Creation ---
+            createEventBtn.addEventListener('click', async () => {
+                const eventTypesQuery = '{ eventTypes { typeId typeName description fields { name type } } }';
+                const data = await fetchGraphQL(eventTypesQuery);
+                if (data) {
+                    allEventTypes = data.eventTypes;
+                    renderCreateEventForm();
+                    createEventModal.style.display = 'block';
+                }
+            });
+
+            function renderCreateEventForm() {
+                const form = document.getElementById('create-event-form');
+                form.innerHTML = `
+                    <label>Title: <input type="text" name="title" required></label>
+                    <label>Location: <input type="text" name="location" required></label>
+                    <label>Start Date: <input type="date" name="startDate" required></label>
+                    <label>End Date: <input type="date" name="endDate" required></label>
+                    <label>Event Type: <select name="typeId"><option value="">Select a type...</option></select></label>
+                    <div id="custom-fields-container"></div>
+                    <button type="submit">Create Event</button>
+                `;
+                const typeSelect = form.querySelector('select[name="typeId"]');
+                allEventTypes.forEach(et => {
+                    const option = document.createElement('option');
+                    option.value = et.typeId;
+                    option.textContent = et.typeName;
+                    typeSelect.appendChild(option);
+                });
+                typeSelect.add(new Option("--- Create New Type ---", "new_type"));
+
+                typeSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'new_type') {
+                        renderCreateEventTypeForm();
+                        createEventTypeModal.style.display = 'block';
+                    } else {
+                        const selectedType = allEventTypes.find(et => et.typeId == e.target.value);
+                        renderCustomFields(selectedType);
+                    }
+                });
+            }
+
+            function renderCustomFields(eventType) {
+                const container = document.getElementById('custom-fields-container');
+                container.innerHTML = '';
+                if (eventType && eventType.fields) {
+                    eventType.fields.forEach(field => {
+                        const fieldType = field.type === 'boolean' ? 'checkbox' : (field.type === 'number' ? 'number' : 'text');
+                        container.innerHTML += `<label>${field.name}: <input type="${fieldType}" name="custom_${field.name}"></label>`;
+                    });
+                }
+            }
+            
+            function renderCreateEventTypeForm() {
+                const form = document.getElementById('create-event-type-form');
+                form.innerHTML = `
+                    <label>Type Name: <input type="text" name="typeName" required></label>
+                    <label>Description: <input type="text" name="description"></label>
+                    <div id="new-custom-fields"></div>
+                    <button type="button" id="add-field-btn">Add Custom Field</button>
+                    <button type="submit">Create Type</button>
+                `;
+                document.getElementById('add-field-btn').addEventListener('click', () => {
+                    document.getElementById('new-custom-fields').insertAdjacentHTML('beforeend', `
+                        <div>
+                            <input placeholder="Field Name" class="new-field-name" style="width: 45%;"/>
+                            <select class="new-field-type" style="width: 45%;"><option value="text">Text</option><option value="number">Number</option><option value="boolean">Boolean</option></select>
+                        </div>
+                    `);
+                });
+            }
+
+            document.getElementById('create-event-type-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const fields = [];
+                document.querySelectorAll('#new-custom-fields > div').forEach(div => {
+                    const name = div.querySelector('.new-field-name').value;
+                    const type = div.querySelector('.new-field-type').value;
+                    if (name) fields.push({ name, type });
+                });
+                const mutation = `mutation CreateType($name: String!, $desc: String, $fields: [CustomFieldDefinitionInput!]!) {
+                    createEventType(eventTypeData: {name: $name, description: $desc, fields: $fields}) { typeId typeName description fields { name type } }
+                }`;
+                const data = await fetchGraphQL(mutation, { name: form.elements.typeName.value, desc: form.elements.description.value, fields });
+                if (data && data.createEventType) {
+                    allEventTypes.push(data.createEventType);
+                    createEventTypeModal.style.display = 'none';
+                    renderCreateEventForm(); // Re-render to include the new type
+                    document.querySelector('#create-event-form select[name="typeId"]').value = data.createEventType.typeId;
+                    renderCustomFields(data.createEventType);
+                }
+            });
+
+            document.getElementById('create-event-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const randomMeetId = Math.floor(Math.random() * 10000);
+                const form = e.target;
+                const customValues = [];
+                const selectedType = allEventTypes.find(et => et.typeId == form.elements.typeId.value);
+                if (selectedType) {
+                    selectedType.fields.forEach(field => {
+                        const input = form.elements[`custom_${field.name}`];
+                        if (input) customValues.push({ fieldName: field.name, value: input.type === 'checkbox' ? input.checked.toString() : input.value });
+                    });
+                }
+                const mutation = `mutation CreateEvent($data: CreateEventInput!) { createEvent(eventData: $data) { meetId } }`;
+                const eventData = {
+                    meetId: randomMeetId,
+                    createdByID: currentUserId,
+                    typeId: parseInt(form.elements.typeId.value),
+                    location: form.elements.location.value,
+                    startDate: form.elements.startDate.value,
+                    endDate: form.elements.endDate.value,
+                    customValues
+                };
+                const data = await fetchGraphQL(mutation, { data: eventData });
+                if (data) {
+                    createEventModal.style.display = 'none';
+                    loadEvents();
+                }
+            });
+
+            // --- Initial Load ---
+            updateUserRole(currentUserRole);
             showPage('people-page');
             loadPeople();
         });
