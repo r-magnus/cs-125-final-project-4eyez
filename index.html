@@ -224,7 +224,19 @@
     </main>
 
     <div id="person-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><div id="modal-body"></div></div></div>
-    <div id="create-event-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Create Event</h2><form id="create-event-form"></form></div></div>
+    <!-- Person Details Modal -->
+<div id="person-details-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2 id="person-details-title">Person Details</h2>
+        <div id="person-details-body">
+            <!-- Details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div id="create-event-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Create Event</h2><form id="create-event-form"></form></div></div>
     <div id="create-event-type-modal" class="modal"><div class="modal-content"><span class="close-button">&times;</span><h2>Create Event Type</h2><form id="create-event-type-form"></form></div></div>
 
     <script>
@@ -250,6 +262,8 @@
             const backToEventsBtn = document.getElementById('back-to-events');
             const createEventModal = document.getElementById('create-event-modal');
             const createEventTypeModal = document.getElementById('create-event-type-modal');
+            const personDetailsModal = document.getElementById('person-details-modal');
+            const personDetailsBody = document.getElementById('person-details-body');
 
             // --- GraphQL ---
             const GQL_ENDPOINT = 'http://127.0.0.1:8000/graphql';
@@ -345,10 +359,30 @@
                             const card = document.createElement('div');
                             card.className = 'person-card';
                             card.textContent = `${p.firstName} ${p.lastName}`;
+                            card.dataset.personId = p.personId; // Store personId
+                            card.addEventListener('click', () => showPersonDetails(p.personId)); // Add click listener
                             grid.appendChild(card);
                         });
                     });
                 }
+            }
+
+            async function showPersonDetails(personId) {
+                const person = allPeople.find(p => p.personId === personId);
+
+                if (!person) {
+                    console.error('Person not found:', personId);
+                    return;
+                }
+
+                document.getElementById('person-details-title').textContent = `${person.firstName} ${person.lastName}`;
+                personDetailsBody.innerHTML = `
+                    <p><strong>ID:</strong> ${person.personId}</p>
+                    <p><strong>Type:</strong> ${person.type}</p>
+                    ${person.grade ? `<p><strong>Grade:</strong> ${person.grade}</p>` : ''}
+                `;
+                
+                personDetailsModal.style.display = 'block';
             }
 
             // --- Event List Page ---
@@ -621,7 +655,13 @@
                 }`;
                 const data = await fetchGraphQL(mutation, { name: form.elements.typeName.value, desc: form.elements.description.value, fields });
                 if (data && data.createEventType) {
-                    allEventTypes.push(data.createEventType);
+                    // Re-fetch all event types to ensure the list is up-to-date
+                    const eventTypesQuery = '{ eventTypes { typeId typeName description fields { name type } } }';
+                    const updatedData = await fetchGraphQL(eventTypesQuery);
+                    if (updatedData) {
+                        allEventTypes = updatedData.eventTypes; // Update the client-side array
+                    }
+
                     createEventTypeModal.style.display = 'none';
                     renderCreateEventForm(); // Re-render to include the new type
                     document.querySelector('#create-event-form select[name="typeId"]').value = data.createEventType.typeId;
@@ -649,6 +689,7 @@
                     location: form.elements.location.value,
                     startDate: form.elements.startDate.value,
                     endDate: form.elements.endDate.value,
+                    title: form.elements.title.value,
                     customValues
                 };
                 const data = await fetchGraphQL(mutation, { data: eventData });

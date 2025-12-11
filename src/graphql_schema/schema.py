@@ -258,6 +258,10 @@ class Mutation:
                 cnx.commit()
                 type_id = cur.lastrowid
             
+            if event_type_collection.find_one({"typeId": type_id}):
+                raise Exception(f"Generated typeId {type_id} from MySQL already exists in MongoDB. "
+                                "Please resolve data inconsistency or clear MongoDB eventTypes collection if appropriate.")
+
             doc = {
                 "typeId": type_id,
                 "name": request.name,
