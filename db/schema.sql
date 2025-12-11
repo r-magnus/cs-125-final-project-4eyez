@@ -44,7 +44,7 @@ CREATE TABLE Meeting(
 );
 
 CREATE TABLE MeetingSignUpItem(
-    id INT PRIMARY KEY,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     signeeId INT NOT NULL,
     signedUpById INT NOT NULL,
     meetingId INT NOT NULL,

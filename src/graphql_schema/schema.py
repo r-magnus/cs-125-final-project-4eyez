@@ -277,10 +277,14 @@ class Mutation:
 
     @strawberry.mutation
     def create_event(self, event_data: CreateEventInput) -> Event:
+        # Determine the effective title early
+        title_from_input = str(event_data.title) if event_data.title is not None else None
+        effective_title = title_from_input if title_from_input else "Untitled Event"
+
         custom_values = [CustomValue(fieldName=cv.fieldName, value=cv.value) for cv in event_data.customValues]
         request = CreateEventRequest(
             meetId=event_data.meetId,
-            title=event_data.title,
+            title=effective_title,
             createdByID=event_data.createdByID,
             typeId=event_data.typeId,
             location=event_data.location,
@@ -330,10 +334,9 @@ class Mutation:
                 cur.execute("SELECT meetId FROM Meeting WHERE meetId = %s", (request.meetId,))
                 existing_meeting = cur.fetchone()
                 if not existing_meeting:
-                    meeting_title = request.title if request.title else "Untitled Event" # Provide default
                     cur.execute(
                         "INSERT INTO Meeting (meetId, title) VALUES (%s, %s)",
-                        (request.meetId, meeting_title),
+                        (request.meetId, effective_title),
                     )
 
                 cur.execute(
@@ -362,11 +365,13 @@ class Mutation:
             }
             custom_event_collection.insert_one(mongo_doc)
             
-            with cnx.cursor(dictionary=True) as cur:
-                cur.execute("SELECT title FROM Meeting WHERE meetId = %s", (request.meetId,))
-                meeting = cur.fetchone()
-                title = meeting['title'] if meeting else ""
+            # The title for the returned Event object is still fetched from the DB
+            # with cnx.cursor(dictionary=True) as cur:
+            #    cur.execute("SELECT title FROM Meeting WHERE meetId = %s", (request.meetId,))
+            #    meeting = cur.fetchone()
+            #    title = meeting['title'] if meeting else "" # This will now always exist or be the newly created one
 
+            with cnx.cursor(dictionary=True) as cur:
                 cur.execute("SELECT typeName FROM eventType WHERE typeId = %s", (request.typeId,))
                 event_type_name_data = cur.fetchone()
                 event_type_name = event_type_name_data['typeName'] if event_type_name_data else "Unknown Type"
@@ -375,7 +380,7 @@ class Mutation:
 
             return Event(
                 meetId=request.meetId,
-                title=title,
+                title=effective_title, # Use the effective_title
                 createdByID=request.createdByID,
                 typeId=request.typeId,
                 location=request.location,
