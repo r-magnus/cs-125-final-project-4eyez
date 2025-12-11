@@ -96,6 +96,16 @@ class EventCustomDataResponse(BaseModel):
     values:Dict[str, Any]
 
 
+class SmallGroupCreate(BaseModel):
+    meetId: int
+    title:str
+    nextMeetingDate: date
+
+
+class SmallGroupResponse(BaseModel):
+    meetId: int
+    nextMeetingDate: date
+
 
 ##END POINTS##
 @router.post("/event-types")
@@ -210,3 +220,60 @@ def get_event_custom_data(meet_id: int):
         typeId=doc["typeId"],
         values=doc.get("values", {}),
     )
+
+@router.post("/smallgroups", response_model=SmallGroupResponse)
+def create_update_smallgroups(body: SmallGroupCreate):
+    cnx = connect_sql()
+    try:
+        with cnx.cursor() as cur:
+            # 1) Ensure Meeting exists
+            cur.execute("SELECT 1 FROM Meeting WHERE meetId = %s", (body.meetId,))
+            exists = cur.fetchone()
+
+            if not exists:
+                cur.execute(
+                    "INSERT INTO Meeting (meetId, title) VALUES (%s, %s)",
+                    (body.meetId, body.title),
+                )
+
+            # 2) Insert / update smallGroup
+            cur.execute(
+                """
+                INSERT INTO smallGroup (meetId, nextMeetingDate)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE nextMeetingDate = VALUES(nextMeetingDate)
+                """,
+                (body.meetId, body.nextMeetingDate),
+            )
+
+        cnx.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cnx.close()
+
+    return SmallGroupResponse(
+        meetId=body.meetId,
+        nextMeetingDate=body.nextMeetingDate,
+    )
+
+@router.get("/smallgroups/{meet_id}", response_model=SmallGroupResponse)
+def get_smallgroups(meet_id: int):
+    cnx = connect_sql()
+    try:
+        with cnx.cursor() as cur:
+            cur.execute("SELECT meetId, nextMeetingDate FROM smallGroup WHERE meetId = %s",
+                (meet_id,),
+            )
+            row = cur.fetchone()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cnx.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="SmallGroup not found")
+
+    return SmallGroupResponse(meetId=row[0], nextMeetingDate=row[1])
+
+
+
