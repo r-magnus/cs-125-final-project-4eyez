@@ -3,3 +3,4 @@
 .env
 src/__pycache__
 db/tmp.sql
+src/graphql_schema/__pycache__
