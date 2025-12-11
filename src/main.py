@@ -78,7 +78,7 @@ def ask_db(q: str):
     except Exception as e:
         print(f"Error with query: {e}")
 
-##MONGODB##
+#MONGODB##
 
 def connect_mongo():
     global mongo_client,mongo_db,event_types_col,event_custom_col

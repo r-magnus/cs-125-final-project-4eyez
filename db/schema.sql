@@ -38,8 +38,7 @@ CREATE TABLE Admin(
 
 CREATE TABLE Meeting(
     meetId INT PRIMARY KEY,
-    title VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL ##added
+    title VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE MeetingSignUpItem(
